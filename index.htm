@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="fa">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>سیستم ثبت هزینه‌های واحد</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/vazir-font@30.1.0/dist/font-face.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    :root {
+      --primary-color: #4361ee;
+      --secondary-color: #3f37c9;
+      --accent-color: #4895ef;
+      --danger-color: #f72585;
+      --warning-color: #f8961e;
+      --success-color: #4cc9f0;
+      --light-color: #f8f9fa;
+      --dark-color: #212529;
+    }
+    
+    body {
+      font-family: Vazir, Tahoma, sans-serif;
+      background: #f7f9fc;
+      margin: 0; padding: 20px;
+      color: var(--dark-color);
+      direction: rtl;
+      line-height: 1.6;
+    }
+    
+    h1 {
+      text-align: center;
+      color: var(--primary-color);
+      margin-bottom: 30px;
+      font-weight: 700;
+      font-size: 2rem;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #fff;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+      border-radius: 12px;
+      padding: 30px;
+    }
+    
+    .summary-card {
+      background: var(--primary-color);
+      color: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin-bottom: 25px;
+      text-align: center;
+      font-size: 1.2rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    
+    input[type="text"], input[type="number"], select {
+      flex: 1 1 100%;
+      padding: 12px 15px;
+      font-size: 16px;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      font-family: Vazir, Tahoma;
+    }
+    
+    input[type="text"]:focus, input[type="number"]:focus, select:focus {
+      border-color: var(--secondary-color);
+      outline: none;
+      box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+    }
+    
+    button {
+      background: var(--primary-color);
+      color: white;
+      padding: 12px 25px;
+      font-size: 17px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      flex: 1 1 100%;
+      transition: all 0.3s ease;
+      font-weight: 600;
+      font-family: Vazir, Tahoma;
+    }
+    
+    button:hover {
+      background: var(--secondary-color);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    .filter {
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+    
+    .filter select {
+      padding: 10px 15px;
+      font-size: 16px;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      cursor: pointer;
+      background: white;
+      flex: 1 1 22%;
+      font-family: Vazir, Tahoma;
+    }
+    
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    th, td {
+      padding: 15px;
+      border-bottom: 1px solid #e0e0e0;
+      text-align: center;
+    }
+    
+    th {
+      background: var(--primary-color);
+      color: white;
+      font-weight: 600;
+    }
+    
+    tr:hover {
+      background: rgba(67, 97, 238, 0.05);
+    }
+    
+    .action-btn {
+      padding: 8px 12px;
+      margin: 0 5px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: Vazir, Tahoma;
+      transition: all 0.2s ease;
+    }
+    
+    .edit-btn {
+      background: var(--warning-color);
+      color: white;
+    }
+    
+    .edit-btn:hover {
+      background: #e07e0e;
+    }
+    
+    .delete-btn {
+      background: var(--danger-color);
+      color: white;
+    }
+    
+    .delete-btn:hover {
+      background: #e51778;
+    }
+    
+    .chart-container {
+      margin: 40px 0;
+      padding: 20px;
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .chart-filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .chart-filters select {
+      padding: 10px 15px;
+      border: 2px solid var(--primary-color);
+      border-radius: 8px;
+      font-family: Vazir, Tahoma;
+    }
+    
+    @media(max-width: 768px) {
+      .filter select, .chart-filters select {
+        flex: 1 1 100%;
+      }
+      
+      .container {
+        padding: 15px;
+      }
+      
+      th, td {
+        padding: 10px 5px;
+        font-size: 14px;
+      }
+      
+      .action-btn {
+        padding: 5px 8px;
+        margin: 2px;
+        font-size: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <h1>سیستم ثبت هزینه‌های واحد</h1>
+
+    <div class="summary-card" id="totalSummary">
+      مجموع کل هزینه‌ها: در حال محاسبه...
+    </div>
+
+    <form id="costForm">
+      <input type="text" id="description" placeholder="توضیح هزینه" required />
+      <input type="number" id="amount" placeholder="مبلغ (تومان)" min="1" required />
+      <select id="costType" required>
+        <option value="" disabled selected>نوع هزینه را انتخاب کنید</option>
+        <option value="جاری">جاری</option>
+        <option value="استانی">استانی</option>
+      </select>
+      <button type="submit" id="submitBtn">ثبت هزینه</button>
+    </form>
+
+    <div class="filter">
+      <select id="filterMonth">
+        <option value="all">همه ماه‌ها</option>
+      </select>
+      <select id="filterYear">
+        <option value="all">همه سال‌ها</option>
+      </select>
+      <select id="filterType">
+        <option value="all">همه انواع</option>
+        <option value="جاری">جاری</option>
+        <option value="استانی">استانی</option>
+      </select>
+      <select id="filterSummaryType">
+        <option value="all">نمایش همه</option>
+        <option value="monthly">ماهیانه</option>
+        <option value="yearly">سالانه</option>
+      </select>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>تاریخ</th>
+          <th>توضیح</th>
+          <th>مبلغ (تومان)</th>
+          <th>نوع</th>
+          <th>عملیات</th>
+        </tr>
+      </thead>
+      <tbody id="costTableBody"></tbody>
+    </table>
+
+    <div class="chart-container">
+      <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 20px;">نمودار هزینه‌ها</h2>
+      <div class="chart-filters">
+        <select id="chartYear">
+          <option value="all">همه سال‌ها</option>
+        </select>
+        <select id="chartType">
+          <option value="all">همه انواع</option>
+          <option value="جاری">جاری</option>
+          <option value="استانی">استانی</option>
+        </select>
+      </div>
+      <canvas id="costChart"></canvas>
+    </div>
+  </div>
+
+  <script>
+    const apiKey = '$2a$10$K0GxG/YDDvwcCOicoQSc3OIPqPpUflP5JvKxVStM6sdQYjq4LdXKi';
+    const binId = '67cd6312e41b4d34e4a3542b';
+
+    // عناصر DOM
+    const elements = {
+      descriptionInput: document.getElementById('description'),
+      amountInput: document.getElementById('amount'),
+      costTypeInput: document.getElementById('costType'),
+      costForm: document.getElementById('costForm'),
+      submitBtn: document.getElementById('submitBtn'),
+      costTableBody: document.getElementById('costTableBody'),
+      totalSummary: document.getElementById('totalSummary'),
+      filterMonth: document.getElementById('filterMonth'),
+      filterYear: document.getElementById('filterYear'),
+      filterType: document.getElementById('filterType'),
+      filterSummaryType: document.getElementById('filterSummaryType'),
+      chartYear: document.getElementById('chartYear'),
+      chartType: document.getElementById('chartType'),
+      costChart: document.getElementById('costChart')
+    };
+
+    let costs = [];
+    let editingId = null;
+    let costChart = null;
+
+    // تابع تاریخ شمسی
+    function getTodayJalali() {
+      const date = new Date();
+      const options = { 
+        year: 'numeric', 
+        month: '2-digit', 
+        day: '2-digit', 
+        calendar: 'persian',
+        numberingSystem: 'latn'
+      };
+      const formatter = new Intl.DateTimeFormat('fa-IR', options);
+      const parts = formatter.formatToParts(date);
+      
+      let year, month, day;
+      for (const part of parts) {
+        if (part.type === 'year') year = part.value;
+        if (part.type === 'month') month = part.value;
+        if (part.type === 'day') day = part.value;
+      }
+      
+      return `${year}/${month}/${day}`;
+    }
+
+    // بارگذاری داده‌ها از jsonbin
+    async function loadCosts() {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+          headers: {
+            'X-Master-Key': apiKey,
+          }
+        });
+        if (!res.ok) throw new Error('خطا در دریافت داده‌ها');
+        const data = await res.json();
+        costs = Array.isArray(data.record) ? data.record : [];
+        renderAll();
+      } catch (e) {
+        console.error(e);
+        costs = [];
+        renderAll();
+      }
+    }
+
+    // ذخیره داده‌ها در jsonbin
+    async function saveCosts() {
+      try {
+        const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': apiKey,
+            'X-Bin-Versioning': 'false'
+          },
+          body: JSON.stringify(costs)
+        });
+        if (!res.ok) throw new Error('خطا در ذخیره داده‌ها');
+      } catch (e) {
+        alert('خطا در ذخیره اطلاعات، اتصال اینترنت یا API key را بررسی کنید.');
+      }
+    }
+
+    // ثبت یا ویرایش هزینه
+    elements.costForm.addEventListener('submit', async e => {
+      e.preventDefault();
+      const description = elements.descriptionInput.value.trim();
+      const amount = parseFloat(elements.amountInput.value);
+      const costType = elements.costTypeInput.value;
+      
+      if (!description || !amount || amount <= 0 || !costType) return;
+
+      const newCost = {
+        id: editingId || Date.now().toString(),
+        date: getTodayJalali(),
+        description,
+        amount,
+        type: costType
+      };
+
+      if (editingId) {
+        // ویرایش رکورد موجود
+        const index = costs.findIndex(c => c.id === editingId);
+        if (index !== -1) {
+          costs[index] = newCost;
+        }
+        editingId = null;
+        elements.submitBtn.textContent = 'ثبت هزینه';
+      } else {
+        // اضافه کردن رکورد جدید
+        costs.unshift(newCost);
+      }
+
+      await saveCosts();
+      renderAll();
+      elements.costForm.reset();
+      elements.descriptionInput.focus();
+    });
+
+    // رندر تمام بخش‌ها
+    function renderAll() {
+      renderCosts();
+      renderSummary();
+      renderChart();
+      fillFilters();
+    }
+
+    // رندر هزینه‌ها در جدول
+    function renderCosts() {
+      let filtered = filterCosts();
+      
+      elements.costTableBody.innerHTML = filtered.length
+        ? filtered.map(c => `
+          <tr>
+            <td>${c.date}</td>
+            <td>${c.description}</td>
+            <td>${c.amount.toLocaleString('fa-IR')}</td>
+            <td>${c.type}</td>
+            <td>
+              <button class="action-btn edit-btn" onclick="editCost('${c.id}')">ویرایش</button>
+              <button class="action-btn delete-btn" onclick="deleteCost('${c.id}')">حذف</button>
+            </td>
+          </tr>`).join('')
+        : `<tr><td colspan="5">هیچ هزینه‌ای یافت نشد</td></tr>`;
+    }
+
+    // فیلتر کردن هزینه‌ها
+    function filterCosts() {
+      let filtered = [...costs];
+      const selectedMonth = elements.filterMonth.value;
+      const selectedYear = elements.filterYear.value;
+      const selectedType = elements.filterType.value;
+
+      if (selectedYear !== 'all') {
+        filtered = filtered.filter(c => c.date.startsWith(selectedYear));
+      }
+      if (selectedMonth !== 'all') {
+        filtered = filtered.filter(c => {
+          const month = c.date.split('/')[1];
+          return month === selectedMonth;
+        });
+      }
+      if (selectedType !== 'all') {
+        filtered = filtered.filter(c => c.type === selectedType);
+      }
+
+      return filtered;
+    }
+
+    // نمایش خلاصه هزینه‌ها
+    function renderSummary() {
+      const filtered = filterCosts();
+      const summaryType = elements.filterSummaryType.value;
+      
+      let total = 0;
+      let summaryText = '';
+      
+      if (summaryType === 'monthly') {
+        const monthlySummary = {};
+        filtered.forEach(c => {
+          const [year, month] = c.date.split('/');
+          const key = `${year}/${month}`;
+          monthlySummary[key] = (monthlySummary[key] || 0) + c.amount;
+        });
+        
+        total = Object.values(monthlySummary).reduce((sum, amount) => sum + amount, 0);
+        
+        summaryText = Object.entries(monthlySummary)
+          .map(([key, amount]) => `${key}: ${amount.toLocaleString('fa-IR')} تومان`)
+          .join('<br>');
+          
+        summaryText = `مجموع هزینه‌ها: ${total.toLocaleString('fa-IR')} تومان<br>${summaryText}`;
+      } 
+      else if (summaryType === 'yearly') {
+        const yearlySummary = {};
+        filtered.forEach(c => {
+          const year = c.date.split('/')[0];
+          yearlySummary[year] = (yearlySummary[year] || 0) + c.amount;
+        });
+        
+        total = Object.values(yearlySummary).reduce((sum, amount) => sum + amount, 0);
+        
+        summaryText = Object.entries(yearlySummary)
+          .map(([year, amount]) => `سال ${year}: ${amount.toLocaleString('fa-IR')} تومان`)
+          .join('<br>');
+          
+        summaryText = `مجموع هزینه‌ها: ${total.toLocaleString('fa-IR')} تومان<br>${summaryText}`;
+      } 
+      else {
+        total = filtered.reduce((sum, c) => sum + c.amount, 0);
+        summaryText = `مجموع هزینه‌ها: ${total.toLocaleString('fa-IR')} تومان`;
+      }
+      
+      elements.totalSummary.innerHTML = summaryText;
+    }
+
+    // ایجاد نمودار
+    function renderChart() {
+      const selectedYear = elements.chartYear.value;
+      const selectedType = elements.chartType.value;
+      
+      let filtered = [...costs];
+      
+      if (selectedYear !== 'all') {
+        filtered = filtered.filter(c => c.date.startsWith(selectedYear));
+      }
+      if (selectedType !== 'all') {
+        filtered = filtered.filter(c => c.type === selectedType);
+      }
+      
+      // گروه‌بندی داده‌ها بر اساس ماه
+      const monthlyData = {};
+      const monthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 
+                         'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+      
+      filtered.forEach(c => {
+        const [year, month] = c.date.split('/');
+        const monthIndex = parseInt(month) - 1;
+        const monthName = monthNames[monthIndex];
+        const key = `${year}-${month}`;
+        
+        if (!monthlyData[key]) {
+          monthlyData[key] = {
+            label: `${monthName} ${year}`,
+            amount: 0
+          };
+        }
+        monthlyData[key].amount += c.amount;
+      });
+      
+      // مرتب سازی بر اساس سال و ماه
+      const sortedData = Object.entries(monthlyData)
+        .sort(([key1], [key2]) => key1.localeCompare(key2))
+        .map(([_, data]) => data);
+      
+      const labels = sortedData.map(data => data.label);
+      const amounts = sortedData.map(data => data.amount);
+      
+      // تنظیمات نمودار
+      const chartData = {
+        labels: labels,
+        datasets: [{
+          label: 'هزینه (تومان)',
+          data: amounts,
+          backgroundColor: 'rgba(67, 97, 238, 0.5)',
+          borderColor: 'rgba(67, 97, 238, 1)',
+          borderWidth: 2,
+          tension: 0.1
+        }]
+      };
+      
+      const config = {
+        type: 'bar',
+        data: chartData,
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'top',
+              rtl: true
+            },
+            tooltip: {
+              rtl: true,
+              callbacks: {
+                label: function(context) {
+                  return context.raw.toLocaleString('fa-IR') + ' تومان';
+                }
+              }
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true,
+              ticks: {
+                callback: function(value) {
+                  return value.toLocaleString('fa-IR');
+                }
+              }
+            }
+          }
+        }
+      };
+      
+      // اگر نمودار قبلی وجود دارد، آن را پاک کنید
+      if (costChart) {
+        costChart.destroy();
+      }
+      
+      // ایجاد نمودار جدید
+      costChart = new Chart(elements.costChart, config);
+    }
+
+    // ویرایش هزینه
+    window.editCost = function(id) {
+      const cost = costs.find(c => c.id === id);
+      if (cost) {
+        editingId = id;
+        elements.descriptionInput.value = cost.description;
+        elements.amountInput.value = cost.amount;
+        elements.costTypeInput.value = cost.type;
+        elements.submitBtn.textContent = 'ویرایش هزینه';
+        elements.descriptionInput.focus();
+      }
+    };
+
+    // حذف هزینه
+    window.deleteCost = async function(id) {
+      if (confirm('آیا از حذف این هزینه مطمئن هستید؟')) {
+        costs = costs.filter(c => c.id !== id);
+        await saveCosts();
+        renderAll();
+      }
+    };
+
+    // پر کردن فیلترها
+    function fillFilters() {
+      const years = new Set();
+      const months = new Set();
+      const types = new Set();
+      const chartYears = new Set();
+
+      costs.forEach(c => {
+        const [year, month] = c.date.split('/');
+        years.add(year);
+        months.add(month);
+        types.add(c.type);
+        chartYears.add(year);
+      });
+
+      // سال‌ها برای فیلتر اصلی
+      const currentYearOptions = Array.from(years).sort((a,b) => b - a);
+      elements.filterYear.innerHTML = `<option value="all">همه سال‌ها</option>` + 
+        currentYearOptions.map(y => `<option value="${y}">${y}</option>`).join('');
+
+      // سال‌ها برای نمودار
+      elements.chartYear.innerHTML = `<option value="all">همه سال‌ها</option>` + 
+        currentYearOptions.map(y => `<option value="${y}">${y}</option>`).join('');
+
+      // ماه‌ها با نام فارسی
+      const monthNames = ['فروردین', 'اردیبهشت', 'خرداد', 'تیر', 'مرداد', 'شهریور', 
+                         'مهر', 'آبان', 'آذر', 'دی', 'بهمن', 'اسفند'];
+      const currentMonthOptions = Array.from(months).sort();
+      elements.filterMonth.innerHTML = `<option value="all">همه ماه‌ها</option>` + 
+        currentMonthOptions.map(m => `<option value="${m}">${monthNames[parseInt(m,10) - 1]}</option>`).join('');
+
+      // انواع هزینه
+      const typeOptions = Array.from(types);
+      elements.filterType.innerHTML = `<option value="all">همه انواع</option>` + 
+        typeOptions.map(t => `<option value="${t}">${t}</option>`).join('');
+      
+      elements.chartType.innerHTML = `<option value="all">همه انواع</option>` + 
+        typeOptions.map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+
+    // رویدادهای تغییر فیلتر
+    elements.filterMonth.addEventListener('change', () => {
+      renderCosts();
+      renderSummary();
+    });
+    
+    elements.filterYear.addEventListener('change', () => {
+      renderCosts();
+      renderSummary();
+    });
+    
+    elements.filterType.addEventListener('change', () => {
+      renderCosts();
+      renderSummary();
+    });
+    
+    elements.filterSummaryType.addEventListener('change', renderSummary);
+    elements.chartYear.addEventListener('change', renderChart);
+    elements.chartType.addEventListener('change', renderChart);
+
+    // بارگذاری اولیه داده‌ها
+    loadCosts();
+  </script>
+</body>
+</html>
