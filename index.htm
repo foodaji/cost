@@ -16,6 +16,7 @@
       --success-color: #4cc9f0;
       --light-color: #f8f9fa;
       --dark-color: #212529;
+      --confirmed-color: #4ade80;
     }
     
     body {
@@ -140,6 +141,11 @@
       background: rgba(67, 97, 238, 0.05);
     }
     
+    tr.confirmed {
+      background-color: rgba(76, 201, 240, 0.1);
+      border-left: 4px solid var(--confirmed-color);
+    }
+    
     .action-btn {
       padding: 8px 12px;
       margin: 0 5px;
@@ -167,6 +173,15 @@
     
     .delete-btn:hover {
       background: #e51778;
+    }
+    
+    .confirm-btn {
+      background: var(--confirmed-color);
+      color: white;
+    }
+    
+    .confirm-btn:hover {
+      background: #22c55e;
     }
     
     .chart-container {
@@ -219,12 +234,12 @@
     <h1>سیستم ثبت هزینه‌های واحد</h1>
 
     <div class="summary-card" id="totalSummary">
-      مجموع کل هزینه‌ها: در حال محاسبه...
+      مجموع کل هزینه‌های تایید شده: در حال محاسبه...
     </div>
 
     <form id="costForm">
       <input type="text" id="description" placeholder="توضیح هزینه" required />
-      <input type="number" id="amount" placeholder="مبلغ (تومان)" min="1" required />
+      <input type="number" id="amount" placeholder="مبلغ (ریال)" min="1" required />
       <select id="costType" required>
         <option value="" disabled selected>نوع هزینه را انتخاب کنید</option>
         <option value="جاری">جاری</option>
@@ -257,8 +272,9 @@
         <tr>
           <th>تاریخ</th>
           <th>توضیح</th>
-          <th>مبلغ (تومان)</th>
+          <th>مبلغ (ریال)</th>
           <th>نوع</th>
+          <th>وضعیت</th>
           <th>عملیات</th>
         </tr>
       </thead>
@@ -266,7 +282,7 @@
     </table>
 
     <div class="chart-container">
-      <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 20px;">نمودار هزینه‌ها</h2>
+      <h2 style="text-align: center; color: var(--primary-color); margin-bottom: 20px;">نمودار هزینه‌های تایید شده</h2>
       <div class="chart-filters">
         <select id="chartYear">
           <option value="all">همه سال‌ها</option>
@@ -381,7 +397,8 @@
         date: getTodayJalali(),
         description,
         amount,
-        type: costType
+        type: costType,
+        confirmed: editingId ? costs.find(c => c.id === editingId)?.confirmed || false : false
       };
 
       if (editingId) {
@@ -417,17 +434,19 @@
       
       elements.costTableBody.innerHTML = filtered.length
         ? filtered.map(c => `
-          <tr>
+          <tr ${c.confirmed ? 'class="confirmed"' : ''}>
             <td>${c.date}</td>
             <td>${c.description}</td>
             <td>${c.amount.toLocaleString('fa-IR')}</td>
             <td>${c.type}</td>
+            <td>${c.confirmed ? 'تایید شده' : 'تایید نشده'}</td>
             <td>
+              ${!c.confirmed ? `<button class="action-btn confirm-btn" onclick="confirmCost('${c.id}')">تایید</button>` : ''}
               <button class="action-btn edit-btn" onclick="editCost('${c.id}')">ویرایش</button>
               <button class="action-btn delete-btn" onclick="deleteCost('${c.id}')">حذف</button>
             </td>
           </tr>`).join('')
-        : `<tr><td colspan="5">هیچ هزینه‌ای یافت نشد</td></tr>`;
+        : `<tr><td colspan="6">هیچ هزینه‌ای یافت نشد</td></tr>`;
     }
 
     // فیلتر کردن هزینه‌ها
@@ -455,7 +474,7 @@
 
     // نمایش خلاصه هزینه‌ها
     function renderSummary() {
-      const filtered = filterCosts();
+      const filtered = filterCosts().filter(c => c.confirmed); // فقط هزینه‌های تایید شده
       const summaryType = elements.filterSummaryType.value;
       
       let total = 0;
@@ -475,7 +494,7 @@
           .map(([key, amount]) => `${key}: ${amount.toLocaleString('fa-IR')} تومان`)
           .join('<br>');
           
-        summaryText = `مجموع هزینه‌ها: ${total.toLocaleString('fa-IR')} تومان<br>${summaryText}`;
+        summaryText = `مجموع هزینه‌های تایید شده: ${total.toLocaleString('fa-IR')} ریال<br>${summaryText}`;
       } 
       else if (summaryType === 'yearly') {
         const yearlySummary = {};
@@ -487,14 +506,14 @@
         total = Object.values(yearlySummary).reduce((sum, amount) => sum + amount, 0);
         
         summaryText = Object.entries(yearlySummary)
-          .map(([year, amount]) => `سال ${year}: ${amount.toLocaleString('fa-IR')} تومان`)
+          .map(([year, amount]) => `سال ${year}: ${amount.toLocaleString('fa-IR')} ریال`)
           .join('<br>');
           
-        summaryText = `مجموع هزینه‌ها: ${total.toLocaleString('fa-IR')} تومان<br>${summaryText}`;
+        summaryText = `مجموع هزینه‌های تایید شده: ${total.toLocaleString('fa-IR')} ریال<br>${summaryText}`;
       } 
       else {
         total = filtered.reduce((sum, c) => sum + c.amount, 0);
-        summaryText = `مجموع هزینه‌ها: ${total.toLocaleString('fa-IR')} تومان`;
+        summaryText = `مجموع هزینه‌های تایید شده: ${total.toLocaleString('fa-IR')} ریال`;
       }
       
       elements.totalSummary.innerHTML = summaryText;
@@ -505,7 +524,7 @@
       const selectedYear = elements.chartYear.value;
       const selectedType = elements.chartType.value;
       
-      let filtered = [...costs];
+      let filtered = [...costs].filter(c => c.confirmed); // فقط هزینه‌های تایید شده
       
       if (selectedYear !== 'all') {
         filtered = filtered.filter(c => c.date.startsWith(selectedYear));
@@ -546,7 +565,7 @@
       const chartData = {
         labels: labels,
         datasets: [{
-          label: 'هزینه (تومان)',
+          label: 'هزینه (ریال)',
           data: amounts,
           backgroundColor: 'rgba(67, 97, 238, 0.5)',
           borderColor: 'rgba(67, 97, 238, 1)',
@@ -569,7 +588,7 @@
               rtl: true,
               callbacks: {
                 label: function(context) {
-                  return context.raw.toLocaleString('fa-IR') + ' تومان';
+                  return context.raw.toLocaleString('fa-IR') + ' ریال';
                 }
               }
             }
@@ -595,6 +614,16 @@
       // ایجاد نمودار جدید
       costChart = new Chart(elements.costChart, config);
     }
+
+    // تایید هزینه
+    window.confirmCost = async function(id) {
+      const index = costs.findIndex(c => c.id === id);
+      if (index !== -1) {
+        costs[index].confirmed = true;
+        await saveCosts();
+        renderAll();
+      }
+    };
 
     // ویرایش هزینه
     window.editCost = function(id) {
