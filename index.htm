@@ -239,7 +239,7 @@
 
     <form id="costForm">
       <input type="text" id="description" placeholder="توضیح هزینه" required />
-      <input type="number" id="amount" placeholder="مبلغ (تومان)" min="1" required />
+      <input type="number" id="amount" placeholder="مبلغ (ریال)" min="1" required />
       <select id="costType" required>
         <option value="" disabled selected>نوع هزینه را انتخاب کنید</option>
         <option value="جاری">جاری</option>
@@ -272,7 +272,7 @@
         <tr>
           <th>تاریخ</th>
           <th>توضیح</th>
-          <th>مبلغ (تومان)</th>
+          <th>مبلغ (ريال)</th>
           <th>نوع</th>
           <th>عملیات</th>
         </tr>
@@ -489,10 +489,10 @@
         total = Object.values(monthlySummary).reduce((sum, amount) => sum + amount, 0);
         
         summaryText = Object.entries(monthlySummary)
-          .map(([key, amount]) => `${key}: ${amount.toLocaleString('fa-IR')} تومان`)
+          .map(([key, amount]) => `${key}: ${amount.toLocaleString('fa-IR')} ريال`)
           .join('<br>');
           
-        summaryText = `مجموع هزینه‌های تایید شده: ${total.toLocaleString('fa-IR')} تومان<br>${summaryText}`;
+        summaryText = `مجموع هزینه‌های تایید شده: ${total.toLocaleString('fa-IR')} ريال<br>${summaryText}`;
       } 
       else if (summaryType === 'yearly') {
         const yearlySummary = {};
@@ -504,14 +504,14 @@
         total = Object.values(yearlySummary).reduce((sum, amount) => sum + amount, 0);
         
         summaryText = Object.entries(yearlySummary)
-          .map(([year, amount]) => `سال ${year}: ${amount.toLocaleString('fa-IR')} تومان`)
+          .map(([year, amount]) => `سال ${year}: ${amount.toLocaleString('fa-IR')} ريال`)
           .join('<br>');
           
-        summaryText = `مجموع هزینه‌های تایید شده: ${total.toLocaleString('fa-IR')} تومان<br>${summaryText}`;
+        summaryText = `مجموع هزینه‌های تایید شده: ${total.toLocaleString('fa-IR')} ريال<br>${summaryText}`;
       } 
       else {
         total = filtered.reduce((sum, c) => sum + c.amount, 0);
-        summaryText = `مجموع هزینه‌های تایید شده: ${total.toLocaleString('fa-IR')} تومان`;
+        summaryText = `مجموع هزینه‌های تایید شده: ${total.toLocaleString('fa-IR')} ريال`;
       }
       
       elements.totalSummary.innerHTML = summaryText;
@@ -563,7 +563,7 @@
       const chartData = {
         labels: labels,
         datasets: [{
-          label: 'هزینه (تومان)',
+          label: 'هزینه (ريال)',
           data: amounts,
           backgroundColor: 'rgba(67, 97, 238, 0.5)',
           borderColor: 'rgba(67, 97, 238, 1)',
@@ -586,7 +586,7 @@
               rtl: true,
               callbacks: {
                 label: function(context) {
-                  return context.raw.toLocaleString('fa-IR') + ' تومان';
+                  return context.raw.toLocaleString('fa-IR') + ' ريال';
                 }
               }
             }
